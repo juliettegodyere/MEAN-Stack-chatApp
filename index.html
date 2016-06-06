@@ -12,7 +12,6 @@
       #messages li { padding: 5px 10px; }
       #messages li:nth-child(odd) { background: #eee; }
     </style>
-  
   </head>
   <!--<script src="http://laymatonline.com/socket.io/socket.io.js"></script>-->
   <script src="http://localhost:1337/socket.io/socket.io.js"></script>
@@ -87,6 +86,8 @@
                       //alert('aa '+JSON.stringify(data));
                       chatSocket.emit('chat_message', JSON.stringify(data));
                       messageBox.val('');
+                      resetform();
+
                     })
               } else {
                 var data = {
@@ -97,9 +98,15 @@
                 //alert('aa '+JSON.stringify(data));
                 chatSocket.emit('chat_message', JSON.stringify(data));
                 messageBox.val('');
+                resetform();
+                // aa.reset();
               }
           });
       });
+      function resetform() {
+        document.getElementById("attachment").value = '';
+      }
+
 
       chatSocket.on('count', function(msg){
          $('#messages').append($('<li style="padding: 5px 10px;">').text('There are '+msg+' person(s) online'));
@@ -120,9 +127,9 @@
 
       <ul id="messages" style="list-style-type: none; margin: 0; padding: 0;">Chat of life</ul>
       <div id"chat_form" action="" style="position: fixed; bottom: 0;">
-        <input class="form-control" id="m" type="text"/>
-        <input type="file" id="attachment" />
-        <button class="btn btn-primary" style="background: rgb(130, 224, 255); border: none; padding: 10px;" id="send_chat">Add comment</button>
+        <input class="form-control" id="m" type="text" />
+        <input type="file" id="attachment" style=" "/>
+        <button class="btn btn-primary" style="background: rgb(130, 224, 255); border: none; padding: 10px;  border-radius: 25px;font-size:15px; " id="send_chat">Add comment</button>
       </div>
 
 
