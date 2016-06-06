@@ -14,57 +14,86 @@
     </style>
   
   </head>
-  <script src="http://localhost:3000/socket.io/socket.io.js"></script>
-  <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+  <!--<script src="http://laymatonline.com/socket.io/socket.io.js"></script>-->
+  <script src="http://localhost:1337/socket.io/socket.io.js"></script>
+  <script src="jquery.min.js"></script>
     <script>
       var username = "";
       var user = '';
+      var MODE = {
+        MESSAGE         : 'message',
+        CONNECTION      : 'connection',
+        DISCONNECTION   : 'disconnection'
+      }
       if (user = window.prompt('Enter a username')){
           username  = user;
        } else {
-          alert('Please enter a username to continue');
+          alert('Please choose a username');
           exit();
        }
 
-
-      var socket = io.connect('http://localhost:3000');
-       
+      var chatSocket = io.connect('http://localhost:1337');
       
       function getUsername(){
         return username;
       }
+
+      function showChat(msg, type){
+          var messagePlaceholder = $('#messages');
+          if (type == MODE.MESSAGE){
+              messagePlaceholder.append($('<li style="padding: 5px 10px;">').text(msg.username + ': '+msg.message));
+          } else if (type == MODE.CONNECTION){
+              messagePlaceholder.append($('<li style="padding: 5px 10px;">').text(msg+" has joined"));
+          } else if (type == MODE.DISCONNECTION){
+              messagePlaceholder.append($('<li style="padding: 5px 10px;">').text(msg+" has left the chat"));
+          }
+      }
       
-
-      socket.on('connect', function(){
-
+      chatSocket.on('connect', function(){
+          chatSocket.emit('reg', getUsername());
           var messageBox = $('#m');
-          $('form').submit(function(){
-            //alert(messageBox.val());
+
+          $('#send_chat').click(function(){
+              var aa = document.getElementById('attachment');
+              
+              var file = $('#attachment').files[0];
+              alert(file.readAsDataUrl());
+              if (!messageBox.val().trim().length) return
               var data = {
                 username : getUsername(),
                 message : messageBox.val()
-              }
-              //alert(JSON.stringify(data));
-              socket.emit('chat_message', JSON.stringify(data));
+              };
+
+              chatSocket.emit('chat_message', JSON.stringify(data));
               messageBox.val('');
               return false;
           });
       });
 
-      socket.on('new_message', function(msg){
-         //alert('Got new message '+msg);
-         var msg = JSON.parse(msg);
-         $('#messages').append($('<li>').text(msg.username + ': '+msg.message));
+      chatSocket.on('count', function(msg){
+         $('#messages').append($('<li style="padding: 5px 10px;">').text('There are '+msg+' person(s) online'));
       });
-      
 
-
+      chatSocket.on('new_message', function(msg){
+         var msg = JSON.parse(msg);
+         showChat(msg, MODE.MESSAGE);
+      });
+      chatSocket.on('new_connection', function(msg){
+        showChat(msg, MODE.CONNECTION);
+      });
+      chatSocket.on('new_disconnection', function(msg){
+         showChat(msg, MODE.DISCONNECTION);
+      });
     </script>
   <body>
 
-    <ul id="messages"></ul>
-    <form action="">
-      <input id="m" type="text" autocomplete="off" /><button>Send</button>
-    </form>
+      <ul id="messages" style="list-style-type: none; margin: 0; padding: 0;">Chat of life</ul>
+      <div id"chat_form" action="" style="position: fixed; bottom: 0;">
+        <input class="form-control" id="m" type="text"/>
+        <input type="file" id="attachment" />
+        <button class="btn btn-primary" style="background: rgb(130, 224, 255); border: none; padding: 10px;" id="send_chat">Add comment</button>
+      </div>
+
+
   </body>
 </html>
