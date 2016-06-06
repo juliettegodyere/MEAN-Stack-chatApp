@@ -40,13 +40,33 @@
 
       function showChat(msg, type){
           var messagePlaceholder = $('#messages');
+          //alert(JSON.stringify(msg));
           if (type == MODE.MESSAGE){
-              messagePlaceholder.append($('<li style="padding: 5px 10px;">').text(msg.username + ': '+msg.message));
+              if (msg.image){
+                var html = '<li style="padding: 5px 10px;"><img width="10%" src="'+msg.image+'" /><p>@'+msg.username+' '+msg.message+'</p><li/>';
+                messagePlaceholder.append(html);
+              } else {
+                messagePlaceholder.append($('<li style="padding: 5px 10px;">').text(msg.username + ': '+msg.message));  
+              }
           } else if (type == MODE.CONNECTION){
-              messagePlaceholder.append($('<li style="padding: 5px 10px;">').text(msg+" has joined"));
+              messagePlaceholder.append($('<li style="padding: 5px 10px;">').text("@"+msg+" has joined"));
           } else if (type == MODE.DISCONNECTION){
-              messagePlaceholder.append($('<li style="padding: 5px 10px;">').text(msg+" has left the chat"));
+              messagePlaceholder.append($('<li style="padding: 5px 10px;">').text("@"+msg+" has left the chat"));
           }
+      }
+
+      function readURL(input) {
+        //alert('dd');
+        var txDeferred = $.Deferred();
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                //alert(e.target.result);
+                txDeferred.resolve(e.target.result);
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+        return txDeferred.promise();
       }
       
       chatSocket.on('connect', function(){
@@ -55,18 +75,29 @@
 
           $('#send_chat').click(function(){
               var aa = document.getElementById('attachment');
-              
-              var file = $('#attachment').files[0];
-              alert(file.readAsDataUrl());
-              if (!messageBox.val().trim().length) return
-              var data = {
-                username : getUsername(),
-                message : messageBox.val()
-              };
-
-              chatSocket.emit('chat_message', JSON.stringify(data));
-              messageBox.val('');
-              return false;
+              //if (!messageBox.val().trim().length) return
+              if (aa.files[0]) {
+                  $.when(readURL(aa))
+                    .done(function(img){
+                      var data = {
+                        username : getUsername(),
+                        message : messageBox.val(), 
+                        image : img
+                      };
+                      //alert('aa '+JSON.stringify(data));
+                      chatSocket.emit('chat_message', JSON.stringify(data));
+                      messageBox.val('');
+                    })
+              } else {
+                var data = {
+                  username : getUsername(),
+                  message : messageBox.val(), 
+                  image : undefined
+                };
+                //alert('aa '+JSON.stringify(data));
+                chatSocket.emit('chat_message', JSON.stringify(data));
+                messageBox.val('');
+              }
           });
       });
 
